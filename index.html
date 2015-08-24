@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html ng-app="mathjaxDynamic">
+
+<head>
+    <title>MathJax Angular Expression</title>
+</head>
+
+<body ng-controller="mathCtrl">
+    <p>This is a simple demo page showing the use of MathJax with angular . We've defined two directives here which watches the changes in expression. You can simply put the values to the `expression` dynamically.</p>
+    <br>
+    <p>See the question below</p>
+    <div dynamic-data="expression"></div>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.js"></script>
+    <script type="text/javascript">
+    MathJax.Hub.Config({
+                skipStartupTypeset: true,
+                messageStyle: "none",
+                "HTML-CSS": {
+                    showMathMenu: false
+                }
+            });
+    angular.module('mathjaxDynamic', [])
+        .controller('mathCtrl', function($scope) {
+            // Mathjax Config
+            
+            MathJax.Hub.Configured();
+            // Expression var
+            $scope.expression = "<p>If cos $\\theta _1&nbsp; = \\displaystyle\\frac{{2\\cos \\theta _2&nbsp; - 1}} {{2 - \\cos \\theta _2 }}$ where $\\theta _{1,} \\theta _2&nbsp; \\in (0,\\pi ),$ then the value of $\\displaystyle\\frac{{\\tan ^2 \\displaystyle\\frac{{\\theta _1 }} {2}}} {{\\tan ^2 \\displaystyle\\frac{{\\theta _2 }} {2}}}$ equals</p>";
+        })
+        .directive("mathjaxBind", function() {
+            return {
+                restrict: "A",
+                scope: {
+                    text: "@mathjaxBind"
+                },
+                controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs) {
+                    $scope.$watch('text', function(value) {
+                        var $script = angular.element("<script type='math/tex; mode=" + ($attrs.mathjaxMode == undefined ? "inline" : $attrs.mathjaxMode) + "'>")
+                            .html(value == undefined ? "" : value);
+                        $element.html("");
+                        $element.append($script);
+                        MathJax.Hub.Queue(["Reprocess", MathJax.Hub, $element[0]]);
+                    });
+                }]
+
+            };
+        })
+        .directive('dynamicData', function($compile) {
+            return {
+                restrict: 'A',
+                replace: true,
+                link: function(scope, ele, attrs) {
+                    scope.$watch(attrs.dynamicData,
+                        function(html) {
+                            html = html.replace(/\{/g, " \{");
+                            html = html.replace(/\{/g, " \{");
+                            html = html.replace(/\{\{/g, " \{ \{");
+                            html = html.replace(/\}\}/g, " \} \}");
+                            html = html.replace(/\$\$([^$]+)\$\$/g, "<span mathjax-bind=\"$1\"></span>");
+                            html = html.replace(/\$([^$]+)\$/g, "<span mathjax-bind=\"$1\"></span>");
+                            ele.html(html);
+                            $compile(ele.contents())(scope);
+                        });
+                }
+            };
+        });
+    </script>
+</body>
+
+</html>
